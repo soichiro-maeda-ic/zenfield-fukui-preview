@@ -1,0 +1,5 @@
+.DS_Store
+*.scpt
+.tmp/
+.playwright-mcp/
+node_modules/
