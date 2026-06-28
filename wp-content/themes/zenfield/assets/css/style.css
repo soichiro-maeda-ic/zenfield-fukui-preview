@@ -435,33 +435,50 @@ button { font: inherit; cursor: pointer; background: none; border: none; color: 
 /* =============================================================
    PRACTICE（考えるよりも、感じ取る。6つ）
    ============================================================= */
+/* C案：写真（正方形）+ 右側に縦書きテキスト
+   雑誌本文ページ的なエディトリアル組み。装飾なし、写真と組版の対話で見せる */
 .practice {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: clamp(1.5rem, 3vw, 2.5rem);
+  gap: clamp(2rem, 4vw, 3.6rem) clamp(1.6rem, 3vw, 2.4rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-@media (max-width: 760px) { .practice { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; } }
-@media (max-width: 420px) { .practice { grid-template-columns: 1fr; max-width: 360px; margin: 0 auto; } }
+@media (max-width: 880px) { .practice { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .practice { grid-template-columns: 1fr; max-width: 380px; margin: 0 auto; } }
 
+.practice__item {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr clamp(2em, 3vw, 2.6em);
+  gap: clamp(0.6rem, 1.2vw, 1.1rem);
+  align-items: start;
+}
 .practice__media {
-  aspect-ratio: 3 / 4;
+  position: relative;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
-  margin-bottom: 1.1rem;
+  margin: 0;
 }
 .practice__media img {
-  width: 100%; height: 100%; object-fit: cover;
+  width: 100%; height: 100%; object-fit: cover; display: block;
   filter: saturate(0.92);
   transition: transform 2s var(--ease);
 }
-.practice__item:hover .practice__media img { transform: scale(1.05); }
+.practice__item:hover .practice__media img { transform: scale(1.04); }
 .practice__text {
-  font-family: var(--gothic);
+  writing-mode: vertical-rl;
+  font-family: var(--mincho);
   font-weight: 500;
-  font-size: clamp(0.95rem, 1.15vw, 1.05rem);
-  letter-spacing: 0.06em;
-  line-height: 1.7;
+  font-size: clamp(0.95rem, 1.2vw, 1.1rem);
+  letter-spacing: 0.2em;
+  line-height: 1.95;
   color: var(--ink);
-  text-align: center;
+  margin: 0;
+  padding: 0;
+  min-block-size: 0;
+  /* 縦書きの段は明示幅で必ず表示。文字が長くて高さ余ったら2行目に自然に折り返す */
 }
 
 /* =============================================================
@@ -955,68 +972,137 @@ button { font: inherit; cursor: pointer; background: none; border: none; color: 
 /* =============================================================
    EVENTS（これからの集い）
    ============================================================= */
-.events { display: flex; flex-direction: column; gap: clamp(1rem, 2vw, 1.5rem); }
-.event { border-bottom: 1px solid var(--line); }   /* 視認性のためのアンダー罫線（色面の上で白半透明） */
-.event__link {
+/* イベント予定：カード型（写真付き、日付を主役にする） */
+.event-cards {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: clamp(1.5rem, 4vw, 3rem);
-  padding: clamp(1.4rem, 3vw, 1.8rem) 0;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(1.5rem, 3vw, 2.4rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-.event__link:hover { opacity: 1; }
-.event__link:hover .event__title { color: var(--shu); }
-.event__link:hover .event__cta .link-arrow__line { width: 80px; }
+@media (max-width: 880px) {
+  .event-cards { grid-template-columns: 1fr; gap: 2rem; max-width: 480px; margin: 0 auto; }
+}
 
-.event__date {
-  display: flex; flex-direction: column; align-items: center;
-  min-width: 66px; line-height: 1.1;
+/* カード自体は背景なし。テラコッタの色面の上に直接配置 */
+.event-card { background: transparent; }
+.event-card__link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.3s var(--ease);
 }
-.event__month {
-  font-family: var(--gothic);
-  font-weight: 500; font-size: 0.78rem;
-  letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute);
+.event-card__link:hover { opacity: 1; transform: translateY(-3px); }
+.event-card__link:hover .event-card__title { opacity: 0.85; }
+
+.event-card__media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  margin: 0 0 clamp(1rem, 1.6vw, 1.4rem);
 }
-.event__day {
+.event-card__media img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  filter: saturate(0.92);
+  transition: transform 0.8s var(--ease);
+}
+.event-card__link:hover .event-card__media img { transform: scale(1.04); }
+
+/* 写真の上部に暗いグラデーションを被せて、日付（白文字）が確実に読めるようにする */
+.event-card__media::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 45%;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.15) 60%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 日付バッジ：写真左上に重ねる白文字、上のグラデで視認性確保 */
+.event-card__date {
+  position: absolute;
+  top: clamp(1rem, 1.8vw, 1.6rem);
+  left: clamp(1rem, 1.8vw, 1.6rem);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+  color: #fff;
+  z-index: 2;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.event-card__date-day {
   font-family: var(--mincho);
-  font-weight: 600;
-  font-size: clamp(1.8rem, 3vw, 2.4rem);
-  color: var(--ink);
-}
-.event__year {
-  font-family: var(--mincho);
-  font-weight: 400; font-size: 0.7rem; letter-spacing: 0.1em; color: var(--mute);
-}
-.event__tag {
-  font-family: var(--gothic);
   font-weight: 500;
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
-  color: var(--shu);
-  margin-bottom: 0.6rem;
-}
-.event__title {
-  font-family: var(--mincho);
-  font-weight: 600;
-  font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
   letter-spacing: 0.04em;
-  line-height: 1.6;
-  color: var(--ink);
-  margin-bottom: 0.6rem;
-  transition: color 0.4s var(--ease);
 }
-.event__meta {
+.event-card__date-year {
+  font-family: var(--mincho);
+  font-weight: 400;
+  font-size: clamp(0.72rem, 0.95vw, 0.86rem);
+  letter-spacing: 0.22em;
+  margin-top: 0.6em;
+  opacity: 0.9;
+}
+
+/* 丸矢印ボタン：写真の右下に重ね、クリック可能なリンクであることを明示
+   色面（#events）の上で --ink が白に反転されるため、ここは濃色を直接指定 */
+.event-card__arrow {
+  position: absolute;
+  right: clamp(1rem, 1.8vw, 1.6rem);
+  bottom: clamp(1rem, 1.8vw, 1.6rem);
+  width: clamp(44px, 5vw, 56px);
+  height: clamp(44px, 5vw, 56px);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mincho);
+  font-size: clamp(1.1rem, 1.4vw, 1.3rem);
+  color: #1A1814;
+  z-index: 2;
+  transition: background 0.3s var(--ease), color 0.3s var(--ease), transform 0.3s var(--ease);
+}
+.event-card__link:hover .event-card__arrow {
+  background: #1A1814;
+  color: #fff;
+  transform: translateX(4px);
+}
+
+/* 写真下のテキスト：白カードなし、テラコッタ色面に白抜きで直書き */
+.event-card__body { padding: 0; }
+.event-card__tag {
+  font-family: var(--mincho);
+  font-weight: 400;
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0 0 0.7rem;
+  text-transform: none;
+}
+.event-card__title {
+  font-family: var(--mincho);
+  font-weight: 500;
+  font-size: clamp(1.1rem, 1.5vw, 1.3rem);
+  letter-spacing: 0.05em;
+  line-height: 1.65;
+  color: #fff;
+  margin: 0 0 0.7rem;
+  transition: opacity 0.4s var(--ease);
+}
+.event-card__meta {
   font-family: var(--gothic);
   font-weight: 400;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   letter-spacing: 0.04em;
-  color: var(--ink-mid);
-}
-.event__cta { color: var(--ink); }
-.event__cta .link-arrow__line { width: 48px; }
-@media (max-width: 640px) {
-  .event__link { grid-template-columns: auto 1fr; gap: 1.2rem 1.5rem; }
-  .event__cta { display: none; }
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.78);
+  margin: 0;
 }
 
 /* =============================================================
@@ -1025,51 +1111,80 @@ button { font: inherit; cursor: pointer; background: none; border: none; color: 
 .news-block { margin-top: clamp(4rem, 8vw, 6rem); }
 .news-block .sec-head { margin-bottom: clamp(2rem, 4vw, 3rem); }
 
-.news {
+/* お知らせ：リスト型（日付＋カテゴリ＋タイトルの横並び、控えめ） */
+.news-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+.news-row { border-bottom: 1px solid var(--line); }
+.news-row__link {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(1.5rem, 3vw, 2.5rem);
+  grid-template-columns: auto auto 1fr auto;
+  align-items: baseline;
+  gap: clamp(1rem, 2.4vw, 2rem);
+  padding: clamp(1.2rem, 2.4vw, 1.8rem) 0;
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s var(--ease);
 }
-@media (max-width: 880px) { .news { grid-template-columns: 1fr; gap: 2rem; max-width: 480px; } }
+.news-row__link:hover { opacity: 1; }
+.news-row__link:hover .news-row__title { color: var(--shu); }
+.news-row__link:hover .news-row__arrow { transform: translateX(4px); opacity: 1; }
 
-.news-item__link { display: block; color: inherit; }
-.news-item__link:hover { opacity: 1; }
-.news-item__link:hover .news-item__title { color: var(--shu); }
-.news-item__media {
-  aspect-ratio: 4 / 3; overflow: hidden; margin-bottom: 1.2rem;
-}
-.news-item__media img {
-  width: 100%; height: 100%; object-fit: cover;
-  filter: saturate(0.92);
-  transition: transform 1.8s var(--ease);
-}
-.news-item__link:hover .news-item__media img { transform: scale(1.05); }
-.news-item__meta {
-  display: flex; align-items: center; gap: 0.6rem;
-  font-family: var(--gothic);
-  font-weight: 500;
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  color: var(--mute);
-  margin-bottom: 0.8rem;
-}
-.news-item__title {
+.news-row__date {
   font-family: var(--mincho);
-  font-weight: 600;
-  font-size: clamp(1rem, 1.3vw, 1.12rem);
-  letter-spacing: 0.04em;
-  line-height: 1.7;
-  color: var(--ink);
-  margin-bottom: 0.7rem;
-  transition: color 0.4s var(--ease);
+  font-weight: 400;
+  font-size: clamp(0.82rem, 1vw, 0.92rem);
+  letter-spacing: 0.1em;
+  color: var(--ink-mid);
+  white-space: nowrap;
 }
-.news-item__excerpt {
+.news-row__cat {
   font-family: var(--gothic);
   font-weight: 400;
-  font-size: 0.86rem;
-  line-height: 1.95;
-  letter-spacing: 0.03em;
-  color: var(--ink-soft);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--mute);
+  padding: 0.2em 0.7em;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.news-row__title {
+  font-family: var(--mincho);
+  font-weight: 500;
+  font-size: clamp(0.95rem, 1.15vw, 1.05rem);
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+  color: var(--ink);
+  margin: 0;
+  transition: color 0.3s var(--ease);
+}
+.news-row__arrow {
+  font-family: var(--mincho);
+  font-size: 1rem;
+  color: var(--ink-mid);
+  opacity: 0.6;
+  transition: transform 0.3s var(--ease), opacity 0.3s var(--ease);
+}
+@media (max-width: 720px) {
+  .news-row__link {
+    grid-template-columns: 1fr auto;
+    gap: 0.4rem 0.8rem;
+  }
+  .news-row__date { grid-column: 1; grid-row: 1; }
+  .news-row__cat { grid-column: 2; grid-row: 1; justify-self: end; }
+  .news-row__title { grid-column: 1 / -1; grid-row: 2; }
+  .news-row__arrow { display: none; }
+}
+.news-row--empty p {
+  padding: 2rem 0;
+  text-align: center;
+  color: var(--ink-mid);
 }
 
 /* =============================================================
@@ -1623,8 +1738,7 @@ button { font: inherit; cursor: pointer; background: none; border: none; color: 
   transform: translateX(4px);
 }
 
-/* コンテンツカード（ZEN Alive [zen_alive_contents] ショートコード出力）
-   写真 + コンテンツ名 + 説明文。リンクあれば全体クリッカブル */
+/* コンテンツカード（ZEN Alive / ZEN Dialogue）── シンプルカード */
 .content-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -1649,13 +1763,13 @@ button { font: inherit; cursor: pointer; background: none; border: none; color: 
   aspect-ratio: 4 / 3;
   background: linear-gradient(135deg, #c8c3b6 0%, #a8a397 100%);
   overflow: hidden;
+  position: relative;
 }
 .content-card__media img {
   width: 100%; height: 100%; object-fit: cover; display: block;
   transition: transform 0.6s var(--ease);
 }
 .content-card--linked:hover .content-card__media img { transform: scale(1.04); }
-.content-card__media--placeholder { position: relative; }
 .content-card__media--placeholder::after {
   content: "PHOTO";
   position: absolute; top: 50%; left: 50%;
@@ -1687,7 +1801,7 @@ button { font: inherit; cursor: pointer; background: none; border: none; color: 
   margin: 0;
 }
 
-/* 季節カード（春夏秋冬の4分割）：デスクトップでは1行4列固定 */
+/* 季節カード（春夏秋冬）：4列固定 */
 .content-cards--seasons {
   grid-template-columns: repeat(4, 1fr);
   gap: clamp(1rem, 2vw, 1.6rem);
