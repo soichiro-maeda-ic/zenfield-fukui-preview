@@ -435,25 +435,95 @@ button { font: inherit; cursor: pointer; background: none; border: none; color: 
 /* =============================================================
    PRACTICE（考えるよりも、感じ取る。6つ）
    ============================================================= */
-/* C案：写真（正方形）+ 右側に縦書きテキスト
-   雑誌本文ページ的なエディトリアル組み。装飾なし、写真と組版の対話で見せる */
+/* D案：左に連番（丸囲み）＋短線＋縦書きキャプション、右に正方形写真。
+   各行の上にグリッド幅いっぱいの横罫線。雑誌の本文ページ的なエディトリアル組み */
+
+/* 見出し左の装飾アーク（大きな円の一部が左上を横切る、ごく淡く） */
+#how { position: relative; overflow: hidden; }
+#how::before {
+  content: "";
+  position: absolute;
+  top: clamp(-9rem, -9vw, -6rem);
+  left: clamp(-13rem, -12vw, -8rem);
+  inline-size: clamp(17rem, 27vw, 25rem);
+  block-size: clamp(17rem, 27vw, 25rem);
+  border: 1px solid var(--line-soft);
+  border-radius: 50%;
+  pointer-events: none;
+}
+#how > .container { position: relative; }
+
 .practice {
+  --pr-row-gap: clamp(2.6rem, 4.4vw, 4rem);
+  --pr-col-gap: clamp(1.6rem, 3vw, 2.4rem);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: clamp(2rem, 4vw, 3.6rem) clamp(1.6rem, 3vw, 2.4rem);
-  margin: 0;
+  gap: var(--pr-row-gap) var(--pr-col-gap);
+  margin: clamp(2.4rem, 4vw, 3.6rem) 0 0;
   padding: 0;
   list-style: none;
+  counter-reset: practice;
 }
 @media (max-width: 880px) { .practice { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 480px) { .practice { grid-template-columns: 1fr; max-width: 380px; margin: 0 auto; } }
+@media (max-width: 480px) { .practice { grid-template-columns: 1fr; max-width: 420px; margin-inline: auto; } }
 
 .practice__item {
+  position: relative;
   margin: 0;
+  counter-increment: practice;
   display: grid;
-  grid-template-columns: 1fr clamp(2em, 3vw, 2.6em);
-  gap: clamp(0.6rem, 1.2vw, 1.1rem);
+  grid-template-columns: clamp(3.4em, 6vw, 4.4em) 1fr;   /* 左：キャプション　右：写真 */
+  gap: clamp(0.8rem, 1.6vw, 1.4rem);
   align-items: start;
+  padding-top: clamp(1.4rem, 2.4vw, 2.2rem);
+}
+
+/* 各ブロック（グリッド）ごとに1本の横罫線。
+   グリッド間（列ギャップ）には罫線を通さず、罫線にも余白をあける */
+.practice__item::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  border-top: 1px solid var(--line);
+}
+
+/* 左：連番（丸）＋短線＋縦書きテキスト */
+.practice__cap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.5rem, 1vw, 0.85rem);
+}
+.practice__num {
+  inline-size: clamp(2.2em, 3.4vw, 2.7em);
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: 'Cormorant Garamond', var(--mincho);
+  font-weight: 500;
+  font-size: clamp(0.92rem, 1.2vw, 1.06rem);
+  letter-spacing: 0.03em;
+  color: var(--ink-soft);
+}
+.practice__num::before { content: counter(practice, decimal-leading-zero); }
+.practice__line {
+  inline-size: 1px;
+  block-size: clamp(1.3rem, 2.4vw, 2rem);
+  background: var(--line);
+}
+.practice__text {
+  writing-mode: vertical-rl;
+  font-family: var(--mincho);
+  font-weight: 500;
+  font-size: clamp(0.95rem, 1.2vw, 1.08rem);
+  letter-spacing: 0.16em;
+  line-height: 1.85;
+  color: var(--ink);
+  margin: 0;
+  padding: 0;
+  min-block-size: 0;
 }
 .practice__media {
   position: relative;
@@ -467,19 +537,6 @@ button { font: inherit; cursor: pointer; background: none; border: none; color: 
   transition: transform 2s var(--ease);
 }
 .practice__item:hover .practice__media img { transform: scale(1.04); }
-.practice__text {
-  writing-mode: vertical-rl;
-  font-family: var(--mincho);
-  font-weight: 500;
-  font-size: clamp(0.95rem, 1.2vw, 1.1rem);
-  letter-spacing: 0.2em;
-  line-height: 1.95;
-  color: var(--ink);
-  margin: 0;
-  padding: 0;
-  min-block-size: 0;
-  /* 縦書きの段は明示幅で必ず表示。文字が長くて高さ余ったら2行目に自然に折り返す */
-}
 
 /* =============================================================
    PROGRAMS（片寄せエディトリアル）
@@ -501,7 +558,7 @@ button { font: inherit; cursor: pointer; background: none; border: none; color: 
 }
 .prog:last-of-type { margin-bottom: 0; }        /* 最後の prog 下の二重余白を解消（後続 loopback の margin-top に委ねる） */
 .prog--reverse .prog__media { order: 2; }
-.prog--reverse .prog__body { order: 1; }
+.prog--reverse .prog__body { order: 1; justify-self: end; }   /* 本文を写真側（内側）へ寄せる */
 
 .prog__media {
   position: relative;
@@ -524,10 +581,11 @@ button { font: inherit; cursor: pointer; background: none; border: none; color: 
 
 .prog__body {
   max-width: 620px;
+  justify-self: start;                                        /* 通常は写真（左）側＝内側へ寄せる */
   padding: clamp(1.5rem, 4vw, 3rem) clamp(2rem, 5vw, 5rem);   /* テキストを内側へ寄せる */
 }
 @media (max-width: 880px) {
-  .prog__body { padding: 1.8rem var(--gutter) 0; max-width: none; }
+  .prog__body { padding: 1.8rem var(--gutter) 0; max-width: none; justify-self: stretch; }
 }
 .prog__en {
   font-family: var(--mincho);
@@ -562,7 +620,8 @@ button { font: inherit; cursor: pointer; background: none; border: none; color: 
    ============================================================= */
 .loopback {
   max-width: 720px;
-  margin: clamp(2rem, 4vw, 3.5rem) auto clamp(3rem, 6vw, 5rem);   /* 下にも書セクションとの距離を確保 */
+  /* 上：直前の全幅写真から十分に離す／下：section の tight-bottom 分を見込んで視覚的に上下を揃える */
+  margin: clamp(6rem, 11vw, 10rem) auto clamp(4rem, 7vw, 6.5rem);
   text-align: center;
 }
 .loopback__lead {
@@ -986,21 +1045,24 @@ button { font: inherit; cursor: pointer; background: none; border: none; color: 
 }
 
 /* カード自体は背景なし。テラコッタの色面の上に直接配置 */
-.event-card { background: transparent; }
+.event-card { background: transparent; height: 100%; }
 .event-card__link {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.4);   /* 細い白の外枠（見本準拠） */
   color: inherit;
   text-decoration: none;
-  transition: transform 0.3s var(--ease);
+  transition: transform 0.3s var(--ease), border-color 0.3s var(--ease);
 }
-.event-card__link:hover { opacity: 1; transform: translateY(-3px); }
+.event-card__link:hover { opacity: 1; transform: translateY(-3px); border-color: rgba(255, 255, 255, 0.7); }
 .event-card__link:hover .event-card__title { opacity: 0.85; }
 
 .event-card__media {
   position: relative;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  margin: 0 0 clamp(1rem, 1.6vw, 1.4rem);
+  margin: 0;                 /* 写真は枠の幅いっぱい（天地左右フラッシュ） */
 }
 .event-card__media img {
   width: 100%; height: 100%; object-fit: cover; display: block;
@@ -1049,33 +1111,39 @@ button { font: inherit; cursor: pointer; background: none; border: none; color: 
   opacity: 0.9;
 }
 
-/* 丸矢印ボタン：写真の右下に重ね、クリック可能なリンクであることを明示
-   色面（#events）の上で --ink が白に反転されるため、ここは濃色を直接指定 */
+/* 丸矢印ボタン：カード下部の右に配置（タグ・本文の下、カード下端で揃える）。
+   テラコッタ色面に白文字なので、細い白の輪郭＋白い矢印。ホバーで白に塗りつぶす */
 .event-card__arrow {
-  position: absolute;
-  right: clamp(1rem, 1.8vw, 1.6rem);
-  bottom: clamp(1rem, 1.8vw, 1.6rem);
-  width: clamp(44px, 5vw, 56px);
-  height: clamp(44px, 5vw, 56px);
+  align-self: flex-end;
+  margin-top: auto;            /* カード下端へ押し下げ、行内で矢印の高さを揃える */
+  width: clamp(42px, 4.6vw, 50px);
+  height: clamp(42px, 4.6vw, 50px);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: transparent;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-family: var(--mincho);
-  font-size: clamp(1.1rem, 1.4vw, 1.3rem);
-  color: #1A1814;
-  z-index: 2;
-  transition: background 0.3s var(--ease), color 0.3s var(--ease), transform 0.3s var(--ease);
+  font-size: clamp(1rem, 1.3vw, 1.2rem);
+  color: #fff;
+  transition: background 0.3s var(--ease), color 0.3s var(--ease), border-color 0.3s var(--ease), transform 0.3s var(--ease);
 }
 .event-card__link:hover .event-card__arrow {
-  background: #1A1814;
-  color: #fff;
+  background: #fff;
+  border-color: #fff;
+  color: #1A1814;
   transform: translateX(4px);
 }
 
-/* 写真下のテキスト：白カードなし、テラコッタ色面に白抜きで直書き */
-.event-card__body { padding: 0; }
+/* 写真下のテキスト：白カードなし、テラコッタ色面に白抜きで直書き。
+   写真は枠いっぱい、本文だけ枠から内側に余白を取る */
+.event-card__body {
+  padding: clamp(1.1rem, 1.9vw, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 .event-card__tag {
   font-family: var(--mincho);
   font-weight: 400;
@@ -1102,7 +1170,7 @@ button { font: inherit; cursor: pointer; background: none; border: none; color: 
   letter-spacing: 0.04em;
   line-height: 1.8;
   color: rgba(255, 255, 255, 0.78);
-  margin: 0;
+  margin: 0 0 clamp(1.2rem, 2vw, 1.8rem);   /* 矢印との最小間隔 */
 }
 
 /* =============================================================
